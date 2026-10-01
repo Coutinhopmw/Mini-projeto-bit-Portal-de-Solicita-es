@@ -1,0 +1,124 @@
+# =========================
+# Variáveis de ambiente e segredos
+# =========================
+# Ignora qualquer .env, mas mantém os modelos versionados (.env.example)
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# =========================
+# Backend · Python / Django
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes virtuais
+.venv/
+venv/
+/backend/env/
+
+# Empacotamento
+*.egg-info/
+*.egg
+.eggs/
+pip-log.txt
+/backend/build/
+/backend/dist/
+/backend/wheels/
+MANIFEST
+
+# Banco local, logs e uploads
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+local_settings.py
+*.log
+logs/
+/backend/media/
+/backend/staticfiles/
+/backend/static_root/
+
+# Testes, cobertura e ferramentas de qualidade
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.hypothesis/
+.tox/
+.nox/
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# =========================
+# Frontend · Node / Vite / React
+# =========================
+node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/coverage/
+/frontend/.vite/
+.eslintcache
+.prettiercache
+.stylelintcache
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Docker
+# =========================
+# Dados locais de volumes e overrides pessoais do Compose
+/database/data/
+pgdata/
+postgres-data/
+docker-compose.override.yml
+*.dump
+
+# =========================
+# Editores e IDEs
+# =========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.code-workspace
+.history/
+*.swp
+*.swo
+*~
+
+# =========================
+# Sistemas operacionais
+# =========================
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =========================
+# Temporários de documentos (Office / LibreOffice)
+# =========================
+~$*
+.~lock.*#
+
+# =========================
+# Temporários do Claude Code
+# =========================
+.claude/settings.local.json
+.claude/worktrees/
