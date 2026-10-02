@@ -28,13 +28,17 @@ docker-compose.yml   serviços de apoio (hoje, só o PostgreSQL)
 
 ## Como rodar em desenvolvimento
 
-Pré-requisitos: Python 3.12, Node.js 22+ e Docker.
+Pré-requisitos: Python 3.12, Node.js 22+ e PostgreSQL 16 ou superior (instalado ou via Docker).
 
 ### 1. Banco de dados
+
+Com Docker:
 
 ```bash
 docker compose up -d db
 ```
+
+Ou com um PostgreSQL local: crie um banco vazio e aponte o `DATABASE_URL` do `backend/.env` para ele (veja o passo 2).
 
 ### 2. Backend (http://localhost:8000)
 
@@ -43,9 +47,22 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate          # Windows. No Linux/macOS: source .venv/bin/activate
 pip install -r requirements-dev.txt
-cp .env.example .env
+cp .env.example .env            # ajuste o DATABASE_URL (usuário, senha, host e banco)
+python manage.py migrate        # cria as tabelas
+python manage.py carregar_seed  # dados de demonstração (pode repetir sem duplicar)
 python manage.py runserver
 ```
+
+Sem o Django, o mesmo resultado sai por SQL puro: `psql "$DATABASE_URL" -f database/schema.sql` e depois `-f database/seed.sql`. O modelo está em [docs/modelo-de-dados.md](docs/modelo-de-dados.md).
+
+Usuários de demonstração (senhas só para teste local):
+
+| Usuário | Senha | Perfil |
+| :-- | :-- | :-- |
+| maria.solicitante | Demo@123 | Solicitante |
+| joao.solicitante | Demo@123 | Solicitante |
+| ana.atendente | Demo@123 | Atendente |
+| admin | Admin@123 | Administrador (Django Admin) |
 
 Teste: <http://localhost:8000/api/ola/> deve responder `{"mensagem": "Olá, mundo! ..."}`.
 
@@ -62,7 +79,7 @@ O Vite encaminha `/api` para o backend na porta 8000.
 ## Qualidade de código
 
 ```bash
-# backend (dentro de backend/)
+# backend (dentro de backend/; o pytest usa um banco de teste separado, criado e removido sozinho)
 ruff check .
 ruff format .
 pytest

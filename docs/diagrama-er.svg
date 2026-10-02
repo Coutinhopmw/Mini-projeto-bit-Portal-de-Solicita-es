@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="850" viewBox="0 0 1500 850">
+<style>
+  text { font-family: 'Segoe UI', Arial, sans-serif; fill: #1f2933; }
+  .titulo { font-size: 22px; font-weight: 700; }
+  .subtitulo { font-size: 13px; fill: #52606d; }
+  .cab { font-size: 15px; font-weight: 700; fill: #ffffff; }
+  .col { font-size: 13px; font-family: Consolas, 'Courier New', monospace; }
+  .tipo { font-size: 12px; font-family: Consolas, 'Courier New', monospace; fill: #52606d; }
+  .flag { font-size: 11px; font-family: Consolas, 'Courier New', monospace; fill: #7b8794; }
+  .badge { font-size: 10px; font-weight: 700; fill: #ffffff; }
+  .card { font-size: 14px; font-weight: 700; fill: #1f4e79; }
+  .nota-t { font-size: 13px; font-weight: 700; }
+  .nota { font-size: 12px; fill: #323f4b; }
+  .sec { font-size: 15px; font-weight: 700; fill: #1f4e79; }
+</style>
+<rect width="1500" height="850" fill="#ffffff"/>
+<text class="titulo" x="40" y="38">Portal de Solicitações · Diagrama ER</text>
+<text class="subtitulo" x="40" y="60">PostgreSQL 16 · BD-01 · NN = NOT NULL · UQ = UNIQUE · CK = CHECK · PK/FK = chaves primária e estrangeira</text>
+<path d="M580,242.0 H540 V130.0 H500" fill="none" stroke="#1f4e79" stroke-width="2"/>
+<path d="M1040,214.0 H1080 V130.0 H1120" fill="none" stroke="#1f4e79" stroke-width="2"/>
+<path d="M810,470 V340" fill="none" stroke="#1f4e79" stroke-width="2"/>
+<path d="M580,632.0 H260 V368" fill="none" stroke="#1f4e79" stroke-width="2"/>
+<circle cx="560" cy="224.0" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="560" y="228.0" text-anchor="middle">N</text>
+<circle cx="520" cy="150.0" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="520" y="154.0" text-anchor="middle">1</text>
+<circle cx="1060" cy="196.0" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="1060" y="200.0" text-anchor="middle">N</text>
+<circle cx="1100" cy="150.0" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="1100" y="154.0" text-anchor="middle">1</text>
+<circle cx="830" cy="456" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="830" y="460" text-anchor="middle">N</text>
+<circle cx="830" cy="360" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="830" y="364" text-anchor="middle">1</text>
+<circle cx="560" cy="614.0" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="560" y="618.0" text-anchor="middle">N</text>
+<circle cx="280" cy="390" r="10" fill="#ffffff" stroke="#1f4e79" stroke-width="1.5"/>
+<text class="card" x="280" y="394" text-anchor="middle">1</text>
+<rect x="40" y="80" width="460" height="288" rx="6" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+<path d="M40,116 V86 Q40,80 46,80 H494 Q500,80 500,86 V116 Z" fill="#1f4e79"/>
+<text class="cab" x="54" y="104">usuarios</text>
+<rect x="50" y="122" width="26" height="16" rx="3" fill="#b7791f"/>
+<text class="badge" x="63" y="134" text-anchor="middle">PK</text>
+<text class="col" x="86" y="134.5">id</text>
+<text class="tipo" x="216" y="134.5">bigint</text>
+<text class="flag" x="316" y="134.5">identidade</text>
+<rect x="41" y="144" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="86" y="162.5">nome</text>
+<text class="tipo" x="216" y="162.5">varchar(150)</text>
+<text class="flag" x="316" y="162.5">NN</text>
+<text class="col" x="86" y="190.5">login</text>
+<text class="tipo" x="216" y="190.5">varchar(50)</text>
+<text class="flag" x="316" y="190.5">NN · UQ</text>
+<rect x="41" y="200" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="86" y="218.5">senha_hash</text>
+<text class="tipo" x="216" y="218.5">varchar(128)</text>
+<text class="flag" x="316" y="218.5">NN</text>
+<text class="col" x="86" y="246.5">papel</text>
+<text class="tipo" x="216" y="246.5">varchar(20)</text>
+<text class="flag" x="316" y="246.5">NN · CK · padrão SOLICITANTE</text>
+<rect x="41" y="256" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="86" y="274.5">ativo</text>
+<text class="tipo" x="216" y="274.5">boolean</text>
+<text class="flag" x="316" y="274.5">NN · padrão true</text>
+<text class="col" x="86" y="302.5">administrador</text>
+<text class="tipo" x="216" y="302.5">boolean</text>
+<text class="flag" x="316" y="302.5">NN · padrão false</text>
+<rect x="41" y="312" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="86" y="330.5">criado_em</text>
+<text class="tipo" x="216" y="330.5">timestamptz</text>
+<text class="flag" x="316" y="330.5">NN · padrão agora</text>
+<text class="col" x="86" y="358.5">ultimo_acesso</text>
+<text class="tipo" x="216" y="358.5">timestamptz</text>
+<text class="flag" x="316" y="358.5">NULL</text>
+<rect x="580" y="80" width="460" height="260" rx="6" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+<path d="M580,116 V86 Q580,80 586,80 H1034 Q1040,80 1040,86 V116 Z" fill="#1f4e79"/>
+<text class="cab" x="594" y="104">solicitacoes</text>
+<rect x="590" y="122" width="26" height="16" rx="3" fill="#b7791f"/>
+<text class="badge" x="603" y="134" text-anchor="middle">PK</text>
+<text class="col" x="626" y="134.5">id</text>
+<text class="tipo" x="756" y="134.5">bigint</text>
+<text class="flag" x="856" y="134.5">identidade</text>
+<rect x="581" y="144" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="626" y="162.5">titulo</text>
+<text class="tipo" x="756" y="162.5">varchar(150)</text>
+<text class="flag" x="856" y="162.5">NN · CK (mín. 3)</text>
+<text class="col" x="626" y="190.5">descricao</text>
+<text class="tipo" x="756" y="190.5">varchar(2000)</text>
+<text class="flag" x="856" y="190.5">NN · CK (mín. 10)</text>
+<rect x="581" y="200" width="458" height="28" fill="#f5f7fa"/>
+<rect x="590" y="206" width="26" height="16" rx="3" fill="#2f855a"/>
+<text class="badge" x="603" y="218" text-anchor="middle">FK</text>
+<text class="col" x="626" y="218.5">categoria_id</text>
+<text class="tipo" x="756" y="218.5">bigint</text>
+<text class="flag" x="856" y="218.5">NN → categorias.id</text>
+<rect x="590" y="234" width="26" height="16" rx="3" fill="#2f855a"/>
+<text class="badge" x="603" y="246" text-anchor="middle">FK</text>
+<text class="col" x="626" y="246.5">solicitante_id</text>
+<text class="tipo" x="756" y="246.5">bigint</text>
+<text class="flag" x="856" y="246.5">NN → usuarios.id</text>
+<rect x="581" y="256" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="626" y="274.5">status</text>
+<text class="tipo" x="756" y="274.5">varchar(20)</text>
+<text class="flag" x="856" y="274.5">NN · CK · padrão ABERTO</text>
+<text class="col" x="626" y="302.5">criado_em</text>
+<text class="tipo" x="756" y="302.5">timestamptz</text>
+<text class="flag" x="856" y="302.5">NN · padrão agora</text>
+<rect x="581" y="312" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="626" y="330.5">atualizado_em</text>
+<text class="tipo" x="756" y="330.5">timestamptz</text>
+<text class="flag" x="856" y="330.5">NN · padrão agora</text>
+<rect x="1120" y="80" width="340" height="120" rx="6" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+<path d="M1120,116 V86 Q1120,80 1126,80 H1454 Q1460,80 1460,86 V116 Z" fill="#1f4e79"/>
+<text class="cab" x="1134" y="104">categorias</text>
+<rect x="1130" y="122" width="26" height="16" rx="3" fill="#b7791f"/>
+<text class="badge" x="1143" y="134" text-anchor="middle">PK</text>
+<text class="col" x="1166" y="134.5">id</text>
+<text class="tipo" x="1240" y="134.5">bigint</text>
+<text class="flag" x="1330" y="134.5">identidade</text>
+<rect x="1121" y="144" width="338" height="28" fill="#f5f7fa"/>
+<text class="col" x="1166" y="162.5">nome</text>
+<text class="tipo" x="1240" y="162.5">varchar(60)</text>
+<text class="flag" x="1330" y="162.5">NN · UQ</text>
+<text class="col" x="1166" y="190.5">ativa</text>
+<text class="tipo" x="1240" y="190.5">boolean</text>
+<text class="flag" x="1330" y="190.5">NN · padrão true</text>
+<rect x="580" y="470" width="460" height="204" rx="6" fill="#ffffff" stroke="#1f4e79" stroke-width="2"/>
+<path d="M580,506 V476 Q580,470 586,470 H1034 Q1040,470 1040,476 V506 Z" fill="#1f4e79"/>
+<text class="cab" x="594" y="494">historico_status</text>
+<rect x="590" y="512" width="26" height="16" rx="3" fill="#b7791f"/>
+<text class="badge" x="603" y="524" text-anchor="middle">PK</text>
+<text class="col" x="626" y="524.5">id</text>
+<text class="tipo" x="756" y="524.5">bigint</text>
+<text class="flag" x="856" y="524.5">identidade</text>
+<rect x="581" y="534" width="458" height="28" fill="#f5f7fa"/>
+<rect x="590" y="540" width="26" height="16" rx="3" fill="#2f855a"/>
+<text class="badge" x="603" y="552" text-anchor="middle">FK</text>
+<text class="col" x="626" y="552.5">solicitacao_id</text>
+<text class="tipo" x="756" y="552.5">bigint</text>
+<text class="flag" x="856" y="552.5">NN → solicitacoes.id</text>
+<text class="col" x="626" y="580.5">status_anterior</text>
+<text class="tipo" x="756" y="580.5">varchar(20)</text>
+<text class="flag" x="856" y="580.5">NULL · CK</text>
+<rect x="581" y="590" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="626" y="608.5">status_novo</text>
+<text class="tipo" x="756" y="608.5">varchar(20)</text>
+<text class="flag" x="856" y="608.5">NN · CK</text>
+<rect x="590" y="624" width="26" height="16" rx="3" fill="#2f855a"/>
+<text class="badge" x="603" y="636" text-anchor="middle">FK</text>
+<text class="col" x="626" y="636.5">alterado_por_id</text>
+<text class="tipo" x="756" y="636.5">bigint</text>
+<text class="flag" x="856" y="636.5">NN → usuarios.id</text>
+<rect x="581" y="646" width="458" height="28" fill="#f5f7fa"/>
+<text class="col" x="626" y="664.5">alterado_em</text>
+<text class="tipo" x="756" y="664.5">timestamptz</text>
+<text class="flag" x="856" y="664.5">NN · padrão agora</text>
+<rect x="1120" y="230" width="340" height="600" rx="6" fill="#f5f7fa" stroke="#cbd2d9"/>
+<text class="sec" x="1134" y="258">Regras do modelo</text>
+<text class="nota-t" x="1134" y="282">Código da solicitação</text>
+<text class="nota" x="1134" y="299">SOL- + id com 5 dígitos (SOL-00042).</text>
+<text class="nota" x="1134" y="315">Derivado, sem coluna [D06].</text>
+<text class="nota-t" x="1134" y="339">Status</text>
+<text class="nota" x="1134" y="356">ABERTO → EM_ATENDIMENTO → CONCLUIDO. CHECK</text>
+<text class="nota" x="1134" y="372">no banco; a transição é validada nos</text>
+<text class="nota" x="1134" y="388">services [D03].</text>
+<text class="nota-t" x="1134" y="412">Exclusão</text>
+<text class="nota" x="1134" y="429">Física, só com status ABERTO. O ORM do</text>
+<text class="nota" x="1134" y="445">Django apaga o histórico junto (CASCADE)</text>
+<text class="nota" x="1134" y="461">[D05].</text>
+<text class="nota-t" x="1134" y="485">Categoria em uso</text>
+<text class="nota" x="1134" y="502">Só pode ser inativada (PROTECT no ORM; a FK</text>
+<text class="nota" x="1134" y="518">no banco também bloqueia) [D07].</text>
+<text class="nota-t" x="1134" y="542">Histórico</text>
+<text class="nota" x="1134" y="559">A criação grava uma linha com</text>
+<text class="nota" x="1134" y="575">status_anterior nulo [D11].</text>
+<text class="nota-t" x="1134" y="599">Papéis</text>
+<text class="nota" x="1134" y="616">SOLICITANTE ou ATENDENTE [D01].</text>
+<text class="nota" x="1134" y="632">administrador = true só para o Django Admin.</text>
+<text class="sec" x="1134" y="664">Índices</text>
+<text class="nota-t" x="1134" y="688">solicitacoes</text>
+<text class="nota" x="1134" y="705">status · categoria_id · criado_em ·</text>
+<text class="nota" x="1134" y="721">solicitante_id</text>
+<text class="nota-t" x="1134" y="745">historico_status</text>
+<text class="nota" x="1134" y="762">solicitacao_id, alterado_em</text>
+</svg>
