@@ -40,6 +40,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "nucleo.middlewares.RegistroDeRequisicoesMiddleware",
 ]
 
 AUTH_USER_MODEL = "usuarios.Usuario"
@@ -86,3 +87,27 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
+
+REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "nucleo.erros.tratar_excecao",
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+}
+
+LOG_LEVEL = env("LOG_LEVEL", default="INFO")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "padrao": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "padrao"},
+    },
+    "loggers": {
+        # Requisições, erros e eventos de negócio (RNF10). O detalhe técnico dos
+        # erros inesperados vai para cá e nunca para a resposta da API.
+        "portal": {"handlers": ["console"], "level": LOG_LEVEL},
+    },
+}

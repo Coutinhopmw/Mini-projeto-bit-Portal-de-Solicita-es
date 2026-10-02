@@ -48,8 +48,7 @@ python -m venv .venv
 .venv\Scripts\activate          # Windows. No Linux/macOS: source .venv/bin/activate
 pip install -r requirements-dev.txt
 cp .env.example .env            # ajuste o DATABASE_URL (usuário, senha, host e banco)
-python manage.py migrate        # cria as tabelas
-python manage.py carregar_seed  # dados de demonstração (pode repetir sem duplicar)
+python manage.py preparar_banco  # aplica as migrations e carrega o seed (pode repetir sem duplicar)
 python manage.py runserver
 ```
 
@@ -64,7 +63,7 @@ Usuários de demonstração (senhas só para teste local):
 | ana.atendente | Demo@123 | Atendente |
 | admin | Admin@123 | Administrador (Django Admin) |
 
-Teste: <http://localhost:8000/api/ola/> deve responder `{"mensagem": "Olá, mundo! ..."}`.
+Teste: <http://localhost:8000/api/saude/> deve responder `{"status": "ok", "banco": "conectado"}`. Qualquer rota inexistente em `/api/` responde `404` no formato padrão de erro (veja [docs/arquitetura-backend.md](docs/arquitetura-backend.md)).
 
 ### 3. Frontend (http://localhost:5173)
 
