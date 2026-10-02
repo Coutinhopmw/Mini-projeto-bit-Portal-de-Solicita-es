@@ -63,7 +63,7 @@ Usuários de demonstração (senhas só para teste local):
 | ana.atendente | Demo@123 | Atendente |
 | admin | Admin@123 | Administrador (Django Admin) |
 
-Teste: <http://localhost:8000/api/saude/> deve responder `{"status": "ok", "banco": "conectado"}`. Qualquer rota inexistente em `/api/` responde `404` no formato padrão de erro (veja [docs/arquitetura-backend.md](docs/arquitetura-backend.md)).
+Teste: <http://localhost:8000/api/saude/> deve responder `{"status": "ok", "banco": "conectado"}`. Qualquer rota inexistente em `/api/` responde `404` no formato padrão de erro. Autenticação (`/api/auth/login/`, `refresh/`, `logout/` e `me/`), perfis e formato de erro estão em [docs/arquitetura-backend.md](docs/arquitetura-backend.md).
 
 ### 3. Frontend (http://localhost:5173)
 

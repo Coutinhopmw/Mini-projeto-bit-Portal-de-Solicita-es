@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import exception_handler as handler_padrao_drf
 from rest_framework.views import set_rollback
 
-from .excecoes import ErroDeNegocio
+from .excecoes import ErroDeNegocio, SessaoExpirada
 
 logger = logging.getLogger("portal.erros")
 
@@ -41,7 +41,7 @@ def _achatar(detalhe):
     return str(detalhe)
 
 
-def _traduzir(exc):
+def _traduzir(exc, view=None):
     """Devolve (código, mensagem, detalhes) para uma exceção já tratada pelo DRF."""
     if isinstance(exc, ErroDeNegocio):
         return exc.erro, str(exc.detail), exc.detalhes
@@ -52,6 +52,8 @@ def _traduzir(exc):
         return "VALIDACAO", "Dados inválidos", detalhes
     if isinstance(exc, exceptions.ParseError):
         return "REQUISICAO_INVALIDA", "O corpo da requisição não é um JSON válido.", None
+    if isinstance(exc, SessaoExpirada):
+        return "SESSAO_EXPIRADA", str(exc.detail), None
     if isinstance(exc, exceptions.NotAuthenticated | exceptions.AuthenticationFailed):
         return "NAO_AUTENTICADO", "Faça login para continuar.", None
     if isinstance(exc, exceptions.PermissionDenied):
@@ -63,7 +65,8 @@ def _traduzir(exc):
     if isinstance(exc, exceptions.NotAcceptable | exceptions.UnsupportedMediaType):
         return "FORMATO_NAO_SUPORTADO", "Envie e aceite o conteúdo em JSON.", None
     if isinstance(exc, exceptions.Throttled):
-        return "MUITAS_TENTATIVAS", "Muitas tentativas. Aguarde e tente novamente.", None
+        mensagem = getattr(view, "mensagem_limite", "Muitas tentativas. Aguarde e tente novamente.")
+        return "MUITAS_TENTATIVAS", mensagem, None
     return "ERRO_NA_REQUISICAO", str(getattr(exc, "detail", exc)), None
 
 
@@ -84,6 +87,6 @@ def tratar_excecao(exc, contexto):
         set_rollback()
         return Response(montar_corpo("ERRO_INTERNO", MENSAGEM_ERRO_INTERNO), status=500)
 
-    erro, mensagem, detalhes = _traduzir(exc)
+    erro, mensagem, detalhes = _traduzir(exc, contexto.get("view"))
     resposta.data = montar_corpo(erro, mensagem, detalhes)
     return resposta

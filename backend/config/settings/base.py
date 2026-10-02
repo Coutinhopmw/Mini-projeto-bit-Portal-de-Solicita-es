@@ -1,5 +1,6 @@
 """Configurações do projeto. Valores sensíveis e de ambiente vêm do .env."""
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -13,7 +14,7 @@ env = environ.Env(
 )
 environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("SECRET_KEY", default="dev-inseguro-troque-no-env")
+SECRET_KEY = env("SECRET_KEY", default="dev-inseguro-troque-no-env-nunca-use-em-producao")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "nucleo",
     "usuarios",
     "solicitacoes",
@@ -90,6 +92,10 @@ CORS_ALLOWED_ORIGINS = env("CORS_ALLOWED_ORIGINS")
 
 REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": "nucleo.erros.tratar_excecao",
+    # Tudo exige login, exceto o que a view libera explicitamente (login, renovação, saúde).
+    "DEFAULT_AUTHENTICATION_CLASSES": ["usuarios.autenticacao.AutenticacaoJWT"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_THROTTLE_RATES": {"login": "5/min"},
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
 }
@@ -110,4 +116,15 @@ LOGGING = {
         # erros inesperados vai para cá e nunca para a resposta da API.
         "portal": {"handlers": ["console"], "level": LOG_LEVEL},
     },
+}
+
+# JWT (D13): acesso curto no cabeçalho Authorization e renovação de 8 h contadas do login,
+# sem rotação, de modo que a sessão expira 8 h depois de entrar. O logout bloqueia a
+# renovação (token_blacklist).
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env.int("JWT_ACCESS_MINUTES", default=15)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=env.int("JWT_REFRESH_HOURS", default=8)),
+    "ROTATE_REFRESH_TOKENS": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "UPDATE_LAST_LOGIN": False,  # o service de login registra o último acesso
 }

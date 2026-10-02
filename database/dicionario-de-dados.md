@@ -93,7 +93,7 @@ As chaves estrangeiras são `DEFERRABLE INITIALLY DEFERRED` e não têm cascata 
 
 ## Tabelas internas do Django
 
-O `python manage.py migrate` também cria tabelas do próprio framework, que não fazem parte do domínio e não são descritas aqui: `django_migrations`, `django_content_type`, `django_admin_log`, `django_session`, `auth_permission` e `auth_group` com suas relações. O `database/schema.sql` contém apenas as quatro tabelas do portal.
+O `python manage.py migrate` também cria tabelas do próprio framework, que não fazem parte do domínio e não são descritas aqui: `django_migrations`, `django_content_type`, `django_admin_log`, `django_session`, `auth_permission`, `auth_group` com suas relações e, para o logout, `token_blacklist_outstandingtoken` e `token_blacklist_blacklistedtoken` (tokens de renovação emitidos e bloqueados). O `database/schema.sql` contém apenas as quatro tabelas do portal.
 
 ## Conferência com os scripts
 

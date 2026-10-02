@@ -17,6 +17,8 @@ METODOS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
 
 
 @api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
 def ola(request):
     return Response({"mensagem": "Olá, mundo! API do Portal de Solicitações no ar."})
 

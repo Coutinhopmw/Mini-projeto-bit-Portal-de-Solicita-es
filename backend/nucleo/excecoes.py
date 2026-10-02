@@ -1,4 +1,4 @@
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, AuthenticationFailed
 
 
 class ErroDeNegocio(APIException):
@@ -28,3 +28,17 @@ class BancoIndisponivel(ErroDeNegocio):
     status_code = 503
     erro = "BANCO_INDISPONIVEL"
     default_detail = "Não foi possível conectar ao banco de dados."
+
+
+class SessaoExpirada(AuthenticationFailed):
+    """Token válido no formato, mas vencido. Leva o usuário de volta ao login com aviso."""
+
+    default_detail = "Sua sessão expirou. Faça login novamente."
+
+
+class CredenciaisInvalidas(ErroDeNegocio):
+    """Mensagem genérica: não revela se o usuário existe nem qual campo errou (RN19)."""
+
+    status_code = 400
+    erro = "CREDENCIAIS_INVALIDAS"
+    default_detail = "Usuário ou senha inválidos."
