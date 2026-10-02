@@ -6,7 +6,7 @@ from nucleo.validacao import CampoTexto
 from usuarios.models import Usuario
 
 from . import repositories, services
-from .models import Categoria, HistoricoStatus, Solicitacao
+from .models import Categoria, HistoricoStatus, Solicitacao, Status
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -51,6 +51,8 @@ class SolicitacaoDetalheSerializer(SolicitacaoListaSerializer):
     historico = HistoricoSerializer(many=True, read_only=True)
     pode_editar = serializers.SerializerMethodField()
     pode_excluir = serializers.SerializerMethodField()
+    pode_alterar_status = serializers.SerializerMethodField()
+    proximo_status = serializers.SerializerMethodField()
 
     class Meta(SolicitacaoListaSerializer.Meta):
         fields = [
@@ -59,6 +61,8 @@ class SolicitacaoDetalheSerializer(SolicitacaoListaSerializer):
             "atualizado_em",
             "pode_editar",
             "pode_excluir",
+            "pode_alterar_status",
+            "proximo_status",
             "historico",
         ]
         read_only_fields = fields
@@ -71,6 +75,15 @@ class SolicitacaoDetalheSerializer(SolicitacaoListaSerializer):
 
     def get_pode_excluir(self, solicitacao):
         return self._pode_alterar(solicitacao)
+
+    def get_pode_alterar_status(self, solicitacao):
+        return services.pode_alterar_status(self.context["request"].user, solicitacao)
+
+    def get_proximo_status(self, solicitacao):
+        """Só o Atendente recebe a próxima transição; a interface mostra um único botão."""
+        if not services.pode_alterar_status(self.context["request"].user, solicitacao):
+            return None
+        return services.proximo_status(solicitacao)
 
 
 class SolicitacaoEntradaSerializer(serializers.Serializer):
@@ -85,5 +98,19 @@ class SolicitacaoEntradaSerializer(serializers.Serializer):
             "null": "Selecione uma categoria.",
             "does_not_exist": "Categoria inválida ou inativa.",
             "incorrect_type": "Categoria inválida ou inativa.",
+        },
+    )
+
+
+class AlteracaoDeStatusSerializer(serializers.Serializer):
+    """Corpo do PATCH de status: {"status": "EM_ATENDIMENTO"}."""
+
+    status = serializers.ChoiceField(
+        choices=Status.choices,
+        error_messages={
+            "required": "Status inválido.",
+            "null": "Status inválido.",
+            "blank": "Status inválido.",
+            "invalid_choice": "Status inválido.",
         },
     )

@@ -1,6 +1,6 @@
 # Arquitetura do backend
 
-Definida nos cards API-01 a API-03. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
+Definida nos cards API-01 a API-04. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
 
 ## Camadas
 
@@ -109,6 +109,7 @@ Todas as rotas exigem login.
 | `GET /api/solicitacoes/{id}/` | todos | Detalhes com descrição e histórico, e os indicadores `pode_editar` e `pode_excluir` |
 | `PUT /api/solicitacoes/{id}/` | só o autor, com status Aberto | Substitui título, descrição e categoria (os três são obrigatórios) |
 | `DELETE /api/solicitacoes/{id}/` | só o autor, com status Aberto | Exclusão física; o histórico sai junto. Responde `204` |
+| `PATCH /api/solicitacoes/{id}/status/` | só o Atendente | Avança o status. Corpo `{"status": "EM_ATENDIMENTO"}` (veja a seção seguinte) |
 | `GET /api/categorias/` | todos | Categorias ativas em ordem alfabética, para o formulário |
 
 **Listagem.** Cada item traz `id`, `codigo` (`SOL-00042`), `titulo`, `categoria` (`{id, nome}`), `solicitante` (`{id, nome}`), `status` e `criado_em` (data de abertura). A paginação usa `?pagina=` e `?tamanho=` (10 por padrão, no máximo 50) e responde `{count, next, previous, results}`. Página inválida ou fora do intervalo responde `400` com `{"detalhes": {"pagina": "Página inválida."}}`.
@@ -132,3 +133,35 @@ Todas as rotas exigem login.
 **Exclusão.** Física, como definido em D05. A exclusão lógica (campo `excluida_em`) fica na Análise Crítica do Memorial como a prática para um ambiente de produção.
 
 Os eventos de criação, edição e exclusão vão para o logger `portal.solicitacoes`, com o código da solicitação e o login do usuário.
+
+## Alteração de status (API-04)
+
+`PATCH /api/solicitacoes/{id}/status/` com o corpo `{"status": "EM_ATENDIMENTO"}`. Só o Atendente altera o status, inclusive o das solicitações que ele mesmo abriu (D02). A resposta é `200` com os detalhes da solicitação, já com o histórico atualizado.
+
+**Ciclo de vida (D03).** A sequência é Aberto, depois Em Atendimento, depois Concluído. Não há retorno, salto nem alteração para o mesmo status, e Concluído é estado final. A regra está no service (`solicitacoes.services.alterar_status`), na tabela `PROXIMO_STATUS`.
+
+| De | Para | Resultado |
+| :-- | :-- | :-- |
+| Aberto | Em Atendimento | 200 |
+| Em Atendimento | Concluído | 200 |
+| qualquer outra combinação, inclusive o mesmo status | | 409 TRANSICAO_INVALIDA ("Não é possível alterar o status de Aberto para Concluído.") |
+
+A transição inválida responde `409`, e não `422` como sugere o texto do card, seguindo a decisão D03 e a ordem de respostas do PLN-01 (409 para "ação proibida pelo estado atual"). Nada é alterado, nem o histórico.
+
+**Ordem das verificações.** A primeira que falhar define a resposta.
+
+| Ordem | Situação | Resposta |
+| :-- | :-- | :-- |
+| 1 | Sem login | 401 NAO_AUTENTICADO |
+| 2 | Solicitação inexistente ou de outro Solicitante | 404 NAO_ENCONTRADO |
+| 3 | Visível, mas o usuário não é Atendente (inclusive o autor) | 403 SEM_PERMISSAO |
+| 4 | `status` ausente ou inexistente | 400 VALIDACAO, `{"status": "Status inválido."}` |
+| 5 | Transição fora do ciclo | 409 TRANSICAO_INVALIDA |
+
+O perfil é checado por objeto (`EhAtendenteNoObjeto`), e não na entrada da view, para um Solicitante não descobrir pelo 403 que a solicitação de outra pessoa existe.
+
+**Atomicidade e concorrência.** A mudança de status, o `atualizado_em` e a linha de `historico_status` são gravados na mesma transação. A solicitação é relida com a linha travada (`SELECT ... FOR UPDATE`), então dois cliques seguidos geram uma única transição: o segundo encontra o status já alterado e recebe `409`. Se a gravação do histórico falhar, o status volta ao que era.
+
+**Para a interface.** O detalhe da solicitação traz `pode_alterar_status` e `proximo_status` (`"EM_ATENDIMENTO"`, `"CONCLUIDO"` ou `null`), que só são preenchidos para o Atendente. Assim a tela mostra apenas o botão da próxima transição válida ("Iniciar atendimento" ou "Concluir"), conforme DN06. Depois que o status sai de Aberto, `pode_editar` e `pode_excluir` passam a `false`, e a API responde `409` se alguém insistir.
+
+Cada mudança vai para o logger `portal.solicitacoes`, com o código, os dois status e o login de quem alterou.

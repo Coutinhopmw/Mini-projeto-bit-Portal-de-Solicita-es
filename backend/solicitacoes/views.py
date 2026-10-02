@@ -11,8 +11,9 @@ from rest_framework.views import APIView
 from nucleo.paginacao import PaginacaoPadrao
 
 from . import services
-from .permissions import EhAutor
+from .permissions import EhAtendenteNoObjeto, EhAutor
 from .serializers import (
+    AlteracaoDeStatusSerializer,
     CategoriaSerializer,
     SolicitacaoDetalheSerializer,
     SolicitacaoEntradaSerializer,
@@ -68,6 +69,25 @@ class SolicitacaoView(APIView):
         self.check_object_permissions(request, solicitacao)
         services.excluir(request.user, pk)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class StatusView(APIView):
+    """PATCH /api/solicitacoes/{id}/status/: só o Atendente, seguindo o ciclo de vida (D03).
+
+    Ordem das verificações: 401, 404 (não enxerga), 403 (não é Atendente), 400 (status
+    ausente ou inexistente) e 409 (transição fora do ciclo).
+    """
+
+    def get_permissions(self):
+        return [IsAuthenticated(), EhAtendenteNoObjeto()]
+
+    def patch(self, request, pk):
+        solicitacao = services.obter(request.user, pk)
+        self.check_object_permissions(request, solicitacao)
+        entrada = AlteracaoDeStatusSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        atualizada = services.alterar_status(request.user, pk, entrada.validated_data["status"])
+        return Response(_detalhe(atualizada, request))
 
 
 class CategoriasView(APIView):

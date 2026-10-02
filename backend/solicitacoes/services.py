@@ -11,10 +11,16 @@ from django.db import transaction
 from usuarios.models import Papel
 
 from . import repositories
-from .excecoes import SolicitacaoNaoEditavel, SolicitacaoNaoEncontrada
+from .excecoes import SolicitacaoNaoEditavel, SolicitacaoNaoEncontrada, TransicaoInvalida
 from .models import Status
 
 logger = logging.getLogger("portal.solicitacoes")
+
+# Ciclo de vida (D03): cada status só avança para o próximo. Concluído é estado final.
+PROXIMO_STATUS = {
+    Status.ABERTO: Status.EM_ATENDIMENTO,
+    Status.EM_ATENDIMENTO: Status.CONCLUIDO,
+}
 
 
 def _escopo(usuario):
@@ -67,6 +73,42 @@ def excluir(usuario, pk):
     codigo = solicitacao.codigo
     repositories.excluir(solicitacao)
     logger.info("Solicitação excluída: %s por %s", codigo, usuario.login)
+
+
+@transaction.atomic
+def alterar_status(usuario, pk, novo_status):
+    """Muda o status e grava o histórico na mesma transação (D11).
+
+    A solicitação é relida com a linha travada, então dois cliques seguidos não geram duas
+    transições: o segundo encontra o status já alterado e recebe 409. Transição inválida
+    não altera nada, nem o histórico.
+    """
+    solicitacao = repositories.buscar_para_atualizar(pk)
+    if solicitacao is None:
+        raise SolicitacaoNaoEncontrada()
+
+    atual = Status(solicitacao.status)
+    novo = Status(novo_status)
+    if PROXIMO_STATUS.get(atual) != novo:
+        raise TransicaoInvalida(
+            f"Não é possível alterar o status de {atual.label} para {novo.label}."
+        )
+
+    repositories.atualizar(solicitacao, status=novo)
+    repositories.registrar_historico(solicitacao, atual, novo, usuario)
+    logger.info(
+        "Status alterado: %s de %s para %s por %s", solicitacao.codigo, atual, novo, usuario.login
+    )
+    return repositories.buscar(pk)
+
+
+def proximo_status(solicitacao):
+    """Próximo status válido, ou None quando a solicitação já está concluída."""
+    return PROXIMO_STATUS.get(solicitacao.status)
+
+
+def pode_alterar_status(usuario, solicitacao):
+    return usuario.papel == Papel.ATENDENTE and proximo_status(solicitacao) is not None
 
 
 def listar_categorias():

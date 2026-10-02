@@ -330,6 +330,8 @@ class TestDetalhe:
             "atualizado_em",
             "pode_editar",
             "pode_excluir",
+            "pode_alterar_status",
+            "proximo_status",
             "historico",
         }
 
