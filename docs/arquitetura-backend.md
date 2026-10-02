@@ -1,6 +1,6 @@
 # Arquitetura do backend
 
-Definida nos cards API-01 e API-02. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
+Definida nos cards API-01 a API-03. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
 
 ## Camadas
 
@@ -97,3 +97,38 @@ O token de acesso vai no cabeçalho `Authorization: Bearer <token>` e dura 15 mi
 **Limitação conhecida (para a Análise Crítica do Memorial).** O JWT não tem estado no servidor. O logout bloqueia o token de renovação, mas o token de acesso já emitido continua valendo até expirar, no máximo 15 minutos. Em produção, o token de renovação iria para um cookie `HttpOnly`, e a validação dos tokens de acesso poderia consultar a lista de bloqueio, ao custo de uma consulta ao banco por requisição. O contador de tentativas de login usa o cache local do processo; com mais de uma instância do servidor, seria preciso um cache compartilhado, e atrás de um proxy reverso é preciso configurar `NUM_PROXIES` para ler o IP real do cliente.
 
 Os eventos de login (realizado e recusado) e de logout vão para o logger `portal.auth`, sem a senha. A chave que assina os tokens é a `SECRET_KEY`: em produção, use um valor aleatório de 32 caracteres ou mais.
+
+## Solicitações e categorias (API-03)
+
+Todas as rotas exigem login.
+
+| Rota | Quem | Resumo |
+| :-- | :-- | :-- |
+| `GET /api/solicitacoes/` | todos | Lista paginada, da mais recente para a mais antiga. O Solicitante vê só as próprias; o Atendente vê todas |
+| `POST /api/solicitacoes/` | todos | Cria. Corpo `{"titulo", "descricao", "categoria"}`; responde `201` com os detalhes |
+| `GET /api/solicitacoes/{id}/` | todos | Detalhes com descrição e histórico, e os indicadores `pode_editar` e `pode_excluir` |
+| `PUT /api/solicitacoes/{id}/` | só o autor, com status Aberto | Substitui título, descrição e categoria (os três são obrigatórios) |
+| `DELETE /api/solicitacoes/{id}/` | só o autor, com status Aberto | Exclusão física; o histórico sai junto. Responde `204` |
+| `GET /api/categorias/` | todos | Categorias ativas em ordem alfabética, para o formulário |
+
+**Listagem.** Cada item traz `id`, `codigo` (`SOL-00042`), `titulo`, `categoria` (`{id, nome}`), `solicitante` (`{id, nome}`), `status` e `criado_em` (data de abertura). A paginação usa `?pagina=` e `?tamanho=` (10 por padrão, no máximo 50) e responde `{count, next, previous, results}`. Página inválida ou fora do intervalo responde `400` com `{"detalhes": {"pagina": "Página inválida."}}`.
+
+**Campos automáticos.** Solicitante (o usuário do token), data de criação e status Aberto são definidos no servidor. Id, código, solicitante, status e datas enviados no corpo são ignorados. A criação também grava o primeiro registro do histórico, na mesma transação (D11).
+
+**Ordem das verificações** em `PUT` e `DELETE`, a mesma do PLN-01: a primeira que falhar define a resposta.
+
+| Ordem | Situação | Resposta |
+| :-- | :-- | :-- |
+| 1 | Sem login | 401 NAO_AUTENTICADO |
+| 2 | Solicitação inexistente ou de outro Solicitante | 404 NAO_ENCONTRADO ("Solicitação não encontrada."), sem confirmar que ela existe |
+| 3 | Visível, mas o usuário não é o autor (por exemplo, um Atendente) | 403 SEM_PERMISSAO |
+| 4 | Dados inválidos (`PUT`) | 400 VALIDACAO, com a mensagem de cada campo |
+| 5 | Status diferente de Aberto | 409 SOLICITACAO_NAO_EDITAVEL |
+
+**Validação.** Título de 3 a 150 caracteres e descrição de 10 a 2000, sem contar os espaços das pontas, e categoria existente e ativa ("Categoria inválida ou inativa."). O banco reforça os mesmos limites com CHECK.
+
+**Concorrência.** A edição e a exclusão relêem a solicitação com a linha travada (`SELECT ... FOR UPDATE`) e conferem o status de novo, para o Atendente não mudar o status entre a leitura e a gravação.
+
+**Exclusão.** Física, como definido em D05. A exclusão lógica (campo `excluida_em`) fica na Análise Crítica do Memorial como a prática para um ambiente de produção.
+
+Os eventos de criação, edição e exclusão vão para o logger `portal.solicitacoes`, com o código da solicitação e o login do usuário.
