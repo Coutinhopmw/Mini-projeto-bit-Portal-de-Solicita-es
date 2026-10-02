@@ -30,7 +30,8 @@ class SolicitacoesView(APIView):
 
     def get(self, request):
         paginador = PaginacaoPadrao()
-        pagina = paginador.paginate_queryset(services.listar(request.user), request, view=self)
+        consulta = services.listar(request.user, request.query_params)
+        pagina = paginador.paginate_queryset(consulta, request, view=self)
         return paginador.get_paginated_response(SolicitacaoListaSerializer(pagina, many=True).data)
 
     def post(self, request):
@@ -88,6 +89,17 @@ class StatusView(APIView):
         entrada.is_valid(raise_exception=True)
         atualizada = services.alterar_status(request.user, pk, entrada.validated_data["status"])
         return Response(_detalhe(atualizada, request))
+
+
+class DashboardView(APIView):
+    """GET /api/dashboard/: total e contagem por status das solicitações que o usuário vê.
+
+    O Solicitante recebe os próprios números e o Atendente, o total geral (RN12). Os valores
+    batem com a listagem sem filtros.
+    """
+
+    def get(self, request):
+        return Response(services.resumo(request.user))
 
 
 class CategoriasView(APIView):

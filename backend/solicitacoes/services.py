@@ -10,7 +10,7 @@ from django.db import transaction
 
 from usuarios.models import Papel
 
-from . import repositories
+from . import filtros, repositories
 from .excecoes import SolicitacaoNaoEditavel, SolicitacaoNaoEncontrada, TransicaoInvalida
 from .models import Status
 
@@ -28,8 +28,19 @@ def _escopo(usuario):
     return None if usuario.papel == Papel.ATENDENTE else usuario.pk
 
 
-def listar(usuario):
-    return repositories.listar(_escopo(usuario))
+def listar(usuario, parametros=None):
+    """Solicitações que o usuário pode ver, com os filtros aplicados sobre elas (D04, D09).
+
+    Os filtros partem da consulta já restrita ao usuário, então um Solicitante nunca alcança
+    as solicitações de outra pessoa, não importa o que peça.
+    """
+    consulta = repositories.listar(_escopo(usuario))
+    return filtros.filtrar(consulta, parametros if parametros is not None else {})
+
+
+def resumo(usuario):
+    """Indicadores do dashboard sobre as solicitações visíveis ao usuário (RN12)."""
+    return repositories.contar_por_status(_escopo(usuario))
 
 
 def obter(usuario, pk):

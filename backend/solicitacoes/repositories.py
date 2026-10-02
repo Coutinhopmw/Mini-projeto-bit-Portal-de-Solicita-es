@@ -4,9 +4,9 @@ Não contém regra de negócio: quem decide o que cada usuário pode ver é o se
 passa `solicitante_id` quando a consulta precisa ser restrita às solicitações dele.
 """
 
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Q
 
-from .models import Categoria, HistoricoStatus, Solicitacao
+from .models import Categoria, HistoricoStatus, Solicitacao, Status
 
 
 def _solicitacoes():
@@ -57,6 +57,19 @@ def registrar_historico(solicitacao, status_anterior, status_novo, alterado_por)
         status_anterior=status_anterior,
         status_novo=status_novo,
         alterado_por=alterado_por,
+    )
+
+
+def contar_por_status(solicitante_id=None):
+    """Total e contagem por status em uma única consulta (agregação condicional)."""
+    consulta = Solicitacao.objects.all()
+    if solicitante_id is not None:
+        consulta = consulta.filter(solicitante_id=solicitante_id)
+    return consulta.aggregate(
+        total=Count("id"),
+        abertas=Count("id", filter=Q(status=Status.ABERTO)),
+        em_atendimento=Count("id", filter=Q(status=Status.EM_ATENDIMENTO)),
+        concluidas=Count("id", filter=Q(status=Status.CONCLUIDO)),
     )
 
 

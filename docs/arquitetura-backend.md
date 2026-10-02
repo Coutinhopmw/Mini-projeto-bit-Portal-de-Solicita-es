@@ -1,6 +1,6 @@
 # Arquitetura do backend
 
-Definida nos cards API-01 a API-04. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
+Definida nos cards API-01 a API-05. O backend é um monólito modular em Django REST Framework, organizado em camadas dentro de cada app de domínio.
 
 ## Camadas
 
@@ -104,12 +104,13 @@ Todas as rotas exigem login.
 
 | Rota | Quem | Resumo |
 | :-- | :-- | :-- |
-| `GET /api/solicitacoes/` | todos | Lista paginada, da mais recente para a mais antiga. O Solicitante vê só as próprias; o Atendente vê todas |
+| `GET /api/solicitacoes/` | todos | Lista paginada, da mais recente para a mais antiga, com filtros opcionais. O Solicitante vê só as próprias; o Atendente vê todas |
 | `POST /api/solicitacoes/` | todos | Cria. Corpo `{"titulo", "descricao", "categoria"}`; responde `201` com os detalhes |
 | `GET /api/solicitacoes/{id}/` | todos | Detalhes com descrição e histórico, e os indicadores `pode_editar` e `pode_excluir` |
 | `PUT /api/solicitacoes/{id}/` | só o autor, com status Aberto | Substitui título, descrição e categoria (os três são obrigatórios) |
 | `DELETE /api/solicitacoes/{id}/` | só o autor, com status Aberto | Exclusão física; o histórico sai junto. Responde `204` |
 | `PATCH /api/solicitacoes/{id}/status/` | só o Atendente | Avança o status. Corpo `{"status": "EM_ATENDIMENTO"}` (veja a seção seguinte) |
+| `GET /api/dashboard/` | todos | Total e contagem por status das solicitações que o usuário vê (veja a seção de filtros e dashboard) |
 | `GET /api/categorias/` | todos | Categorias ativas em ordem alfabética, para o formulário |
 
 **Listagem.** Cada item traz `id`, `codigo` (`SOL-00042`), `titulo`, `categoria` (`{id, nome}`), `solicitante` (`{id, nome}`), `status` e `criado_em` (data de abertura). A paginação usa `?pagina=` e `?tamanho=` (10 por padrão, no máximo 50) e responde `{count, next, previous, results}`. Página inválida ou fora do intervalo responde `400` com `{"detalhes": {"pagina": "Página inválida."}}`.
@@ -165,3 +166,34 @@ O perfil é checado por objeto (`EhAtendenteNoObjeto`), e não na entrada da vie
 **Para a interface.** O detalhe da solicitação traz `pode_alterar_status` e `proximo_status` (`"EM_ATENDIMENTO"`, `"CONCLUIDO"` ou `null`), que só são preenchidos para o Atendente. Assim a tela mostra apenas o botão da próxima transição válida ("Iniciar atendimento" ou "Concluir"), conforme DN06. Depois que o status sai de Aberto, `pode_editar` e `pode_excluir` passam a `false`, e a API responde `409` se alguém insistir.
 
 Cada mudança vai para o logger `portal.solicitacoes`, com o código, os dois status e o login de quem alterou.
+
+## Filtros e dashboard (API-05)
+
+### Filtros de `GET /api/solicitacoes/`
+
+Todos os parâmetros são opcionais e combináveis: a solicitação precisa atender a todos os que forem enviados (D09). Eles se somam à paginação (`pagina` e `tamanho`), e os links `next` e `previous` preservam os filtros.
+
+| Parâmetro | Regra | Erro de validação (400) |
+| :-- | :-- | :-- |
+| `de=AAAA-MM-DD` | Data de criação a partir do dia informado, inclusive | "Data inválida. Use o formato AAAA-MM-DD." |
+| `ate=AAAA-MM-DD` | Data de criação até o dia informado, inclusive | "Data inválida. Use o formato AAAA-MM-DD." |
+| `de` e `ate` juntos | A data inicial não pode ser maior que a final | "A data inicial não pode ser maior que a data final." (em `de`) |
+| `categoria=<id>` | Id de uma categoria existente, mesmo inativa, para encontrar solicitações antigas | "Categoria inválida." |
+| `status=<STATUS>` | `ABERTO`, `EM_ATENDIMENTO` ou `CONCLUIDO` | "Status inválido." |
+| `q=<texto>` | Busca parcial no título, sem diferenciar maiúsculas de minúsculas; no máximo 100 caracteres | "A busca deve ter no máximo 100 caracteres." |
+
+Os nomes seguem a matriz de requisitos do PLN-01 (`de`, `ate`, `categoria`, `status`, `q`), e não os do texto do card (`dataInicio`, `dataFim`, `categoriaId`). Parâmetros inválidos nunca viram um filtro silencioso: a resposta é `400`, com a mensagem de cada campo em `detalhes`, e vários erros voltam juntos. Parâmetros desconhecidos são ignorados, e um valor vazio (`?status=`) equivale a não filtrar.
+
+**Período e fuso.** O dia é contado no fuso America/Sao_Paulo, e os dois extremos são inclusos: `de` vale a partir de 00:00 do dia, e `ate` vale até o último instante do dia (internamente, "menor que 00:00 do dia seguinte", o que também aproveita o índice de `criado_em`). Uma solicitação criada às 02:30 UTC de 01/10 aparece em 30/09, porque em São Paulo ainda são 23:30. As datas ficam gravadas com fuso (`timestamptz`) e são convertidas só na comparação.
+
+**Visibilidade.** Os filtros partem da consulta já restrita ao usuário (D04), então um Solicitante nunca alcança as solicitações de outra pessoa, não importa o que peça.
+
+**Busca por texto.** O `icontains` do Django trata `%` e `_` como texto literal, então buscar "50%" procura "50%". A busca ainda diferencia acentos ("solicitacao" não acha "solicitação"). Tornar a busca insensível a acentos exigiria a extensão `unaccent` do PostgreSQL; fica como melhoria e entra na Análise Crítica do Memorial.
+
+### Dashboard (`GET /api/dashboard/`)
+
+```json
+{ "total": 12, "abertas": 4, "em_atendimento": 4, "concluidas": 4 }
+```
+
+O Solicitante recebe os próprios números e o Atendente, o total geral (RN12), na mesma regra de visibilidade da listagem, então o dashboard sempre bate com a lista que o usuário vê. Os quatro valores saem de uma única consulta de agregação condicional (`COUNT(*)` e `COUNT(*) FILTER (WHERE status = ...)`), sem uma consulta por status.
