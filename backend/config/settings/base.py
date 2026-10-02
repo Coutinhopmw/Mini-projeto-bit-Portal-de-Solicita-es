@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "nucleo",
+    "usuarios",
+    "solicitacoes",
 ]
 
 MIDDLEWARE = [
@@ -39,6 +41,8 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+AUTH_USER_MODEL = "usuarios.Usuario"
 
 ROOT_URLCONF = "config.urls"
 
